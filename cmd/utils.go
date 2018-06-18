@@ -114,6 +114,29 @@ func getInterfaceIPv4s() ([]net.IP, error) {
 	return nips, nil
 }
 
+func stripCtlAndExtFromBytes(str string) string {
+	b := make([]byte, len(str))
+	var bl int
+	for i := 0; i < len(str); i++ {
+		c := str[i]
+		if c >= 32 && c < 127 {
+			b[bl] = c
+			bl++
+		}
+	}
+	return string(b[:bl])
+}
+
+
+func stripCtlAndExtFromUTF8(str string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 32 && r < 127 {
+			return r
+		}
+		return -1
+	}, str)
+}
+
 // execContainer execs a given command inside the container
 func execContainer(containerName string, cmd []string) []byte {
 	optionsCreate := types.ExecConfig{
@@ -141,12 +164,14 @@ func execContainer(containerName string, cmd []string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
+    fmt.Println("%X", output)
 
 	// Remove 8 first characters to get a readable content
 	// Sometimes the command returns nothing, without the following if the program fails without
 	// runtime error: slice bounds out of range
 	if len(output) > 0 {
-		return output[8:]
+        fmt.Println(stripCtlAndExtFromBytes(string(output)))
+        return []byte(stripCtlAndExtFromBytes(string(output)))
 	}
 	return nil
 }
@@ -335,11 +360,22 @@ func echoInfo(containerName string) {
 	fmt.Println(infoLine)
 }
 
+func after(value string, a string) string {
+    // Get substring after a string.
+    pos := strings.Index(value, a)
+    if pos == -1 {
+        return ""
+    }
+    return value[pos:]
+}
+
 // getAwsKey gets AWS keys from inside the container
 func getAwsKey(containerName string) (string, string) {
 	cmd := []string{"cat", "/nano_user_details"}
 
 	output := execContainer(containerName, cmd)
+    output = []byte(after(string(output), "{"))
+    fmt.Println("plop", string(output))
 
 	// declare structures for json
 	type s3Details []struct {
