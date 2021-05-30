@@ -29,7 +29,7 @@ prepare:
 	unset GOOS; unset GOARCH; cd cmd; go test -timeout 1m -count 5
 
 darwin:
-	make GOOS=darwin GOARCH:=amd64
+	make GOOS=darwin GOARCH:=arm64
 
 linux-%:
 	make GOOS=linux GOARCH:=$*

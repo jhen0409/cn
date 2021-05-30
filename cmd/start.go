@@ -33,6 +33,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/spf13/cobra"
+
+	specs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 var (
@@ -195,7 +197,7 @@ func runContainer(cmd *cobra.Command, args []string) {
 				if sizeBluestoreBlockToBytes == 0 {
 					log.Fatal("Wrong unit passed: ", getSize(flavor), ". Please refer to https://en.wikipedia.org/wiki/Byte.")
 				}
-				envs = append(envs, "BLUESTORE_BLOCK_SIZE="+string(sizeBluestoreBlockToBytes))
+				envs = append(envs, "BLUESTORE_BLOCK_SIZE="+string(rune(sizeBluestoreBlockToBytes)))
 			}
 		}
 		if testDev == "blockdev" {
@@ -288,7 +290,11 @@ func runContainer(cmd *cobra.Command, args []string) {
 
 	log.Printf("Running cluster %s | image %s | flavor %s {%s Memory, %d CPU} ...", containerNameToShow, getImageName(), flavor, getMemorySize(flavor), ressources.NanoCPUs)
 
-	resp, err := getDocker().ContainerCreate(ctx, config, hostConfig, nil, containerName)
+	p := &specs.Platform{
+		OS:           "linux",
+		Architecture: "arm64",
+	}
+	resp, err := getDocker().ContainerCreate(ctx, config, hostConfig, nil, p, containerName)
 	if err != nil {
 		log.Fatal(err)
 	}
