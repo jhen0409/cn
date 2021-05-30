@@ -28,6 +28,9 @@ prepare:
 	dep ensure
 	unset GOOS; unset GOARCH; cd cmd; go test -timeout 1m -count 5
 
+darwin-arm64:
+	make GOOS=darwin GOARCH:=arm64
+
 darwin:
 	make GOOS=darwin GOARCH:=amd64
 
